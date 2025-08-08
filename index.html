@@ -5,63 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Border Collie Agility — Polished</title>
+<title>Border Collie Agility — Ball Chase</title>
 <style>
-  :root {
-    --skyTop: #7ecbff;
-    --skyMid: #a9ddff;
-    --grass1: #5bc25f;
-    --grass2: #3aa64a;
-    --panelBlue: #1565c0;
-    --panelDark: #0d47a1;
-    --postRed: #e53935;
-    --tireDark: #212121;
+  :root{
+    --skyTop:#7ecbff; --skyMid:#a9ddff;
+    --grass1:#5bc25f; --grass2:#3aa64a;
+    --panelBlue:#1565c0; --panelDark:#0d47a1; --postRed:#e53935; --postDark:#b71c1c;
+    --ink:#123; --hud:#ffffff;
+    --gold:#ffcc33; --goldDark:#c79400;
+    --pillOn:#00c853; --pillOff:#cccccc;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin:0; padding:0; height:100%; background: var(--skyTop); font-family: -apple-system, system-ui, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"); overscroll-behavior: none; }
-  #app { position:fixed; inset:0; display:grid; grid-template-rows: auto 1fr auto;
-         background: linear-gradient(var(--skyTop), var(--skyMid) 60%, var(--grass1) 60%); }
-  header { padding:.5rem max(12px, env(safe-area-inset-left)) .5rem max(12px, env(safe-area-inset-right));
-           display:flex; gap:8px; align-items:center; justify-content:space-between;
-           background: rgba(255,255,255,.45); backdrop-filter: blur(8px) saturate(1.2);
-           border-bottom:1px solid rgba(0,0,0,.06); }
-  .left { display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-weight:700; color:#123; }
-  .btn { appearance:none; border:none; border-radius:12px; padding:.55rem .8rem; font-weight:700;
-         background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.12); color:#123; }
-  label.btn { cursor:pointer; }
-  #stage { position:relative; display:grid; place-items:center; }
-  canvas { width:100vw; height:calc(100vh - 230px); max-height: 72vh; touch-action:none;
-           border-radius:12px; border:2px solid rgba(0,0,0,.06); box-shadow:0 10px 30px rgba(0,0,0,.15); background: transparent; }
-  @media (min-aspect-ratio: 4/3) and (min-width: 900px) { canvas { height: calc(100vh - 190px); max-height: 78vh; } }
-  footer { padding: .5rem max(12px, env(safe-area-inset-left)) calc(.5rem + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
-           display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:stretch; }
-  .bigbtn { font-size:clamp(16px,2.8vw,22px); padding:1.05rem 1rem; border-radius:16px; background:rgba(255,255,255,.9);
-            box-shadow:0 10px 25px rgba(0,0,0,.18); border:2px solid rgba(0,0,0,.08); font-weight:800; }
-  .bigbtn:active { transform: translateY(1px); }
-  #hint { grid-column: 1 / -1; text-align:center; color:#134; opacity:.9; font-size:.95rem; }
-  #dogFile { display:none; }
-
-  /* Tap to Start overlay for iOS audio */
-  #startOverlay { position: fixed; inset: 0; display: grid; place-items: center;
-    background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.75)); z-index: 9999; }
-  #startOverlay .panel { background:#fff; border-radius:16px; padding:20px 18px;
-    box-shadow:0 12px 30px rgba(0,0,0,.18); text-align:center; max-width:540px; border:1px solid rgba(0,0,0,.06); }
-  #startOverlay button { margin-top:12px; padding:12px 18px; font-weight:800; border-radius:12px; border:2px solid rgba(0,0,0,.08); background:#2ecc71; color:#fff; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--skyTop);font-family:-apple-system,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  #app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;background:linear-gradient(var(--skyTop),var(--skyMid) 60%,var(--grass1) 60%)}
+  header{padding:.5rem max(12px,env(safe-area-inset-left)) .5rem max(12px,env(safe-area-inset-right));
+    display:flex;gap:10px;align-items:center;justify-content:space-between;background:rgba(255,255,255,.45);backdrop-filter:blur(8px) saturate(1.2);
+    border-bottom:1px solid rgba(0,0,0,.06)}
+  .left{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--ink)}
+  .pill{border:none;border-radius:9999px;padding:.45rem .75rem;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.12);background:#fff;color:var(--ink)}
+  .pill.toggle{background:var(--pillOff);color:#333}
+  .pill.on{background:var(--pillOn);color:#fff}
+  #mode{background:#fff}
+  #scoreWrap{display:flex;align-items:center;gap:6px;background:#fff;border-radius:9999px;padding:.35rem .7rem;font-weight:800;color:#0b3d20;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  #scoreWrap .spark{opacity:0;transition:opacity .2s, transform .2s}
+  #scoreWrap.bump .spark{opacity:1;transform:translateY(-4px)}
+  #stage{position:relative;display:grid;place-items:center}
+  canvas{width:100vw;height:calc(100vh - 230px);max-height:72vh;touch-action:none;border-radius:12px;border:2px solid rgba(0,0,0,.06);box-shadow:0 10px 30px rgba(0,0,0,.15);background:transparent}
+  @media (min-aspect-ratio:4/3) and (min-width:900px){canvas{height:calc(100vh - 190px);max-height:78vh}}
+  footer{padding:.5rem max(12px,env(safe-area-inset-left)) calc(.5rem + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
+  .bigbtn{font-size:clamp(16px,2.6vw,22px);padding:1.05rem 1rem;border-radius:16px;background:#fff;box-shadow:0 10px 25px rgba(0,0,0,.18);border:2px solid rgba(0,0,0,.08);font-weight:800;color:var(--ink)}
+  .bigbtn:active{transform:translateY(1px)}
+  #hint{grid-column:1 / -1;text-align:center;color:#134;opacity:.9;font-size:.95rem}
+  /* Start + Mode overlays */
+  .overlay{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));z-index:9999}
+  .panel{background:#fff;border-radius:16px;padding:18px;border:1px solid rgba(0,0,0,.06);box-shadow:0 12px 30px rgba(0,0,0,.18);text-align:center;max-width:560px}
+  .panel h2{margin:.2rem 0}
+  .panel .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .modebtn{border:none;border-radius:12px;padding:12px 14px;font-weight:800;background:#eef2ff}
+  .modebtn:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
     <div class="left">
-      <div>🏆 Score: <span id="score">0</span> • 🔝 Best: <span id="best">0</span></div>
-      <button id="sound" class="btn" aria-label="Sound">🔊 Sound: Off</button>
-      <button id="music" class="btn" aria-label="Music">🎵 Music: Off</button>
-      <label class="btn" for="dogFile">📷 Load Dog Photo</label>
-      <input id="dogFile" type="file" accept="image/*">
+      <div id="scoreWrap">🏆 <span id="score">0</span><span class="spark">+1</span></div>
+      <button id="sound" class="pill toggle" aria-label="Sound">🔊 Sound</button>
+      <button id="music" class="pill toggle" aria-label="Music">🎵 Music</button>
+      <button id="mode" class="pill" aria-label="Mode">🕹️ Mode: <span id="modeName">Levels</span></button>
     </div>
-    <div style="display:flex; gap:8px; align-items:center">
-      <button id="pause" class="btn" aria-label="Pause">⏸️ Pause</button>
-      <button id="restart" class="btn" aria-label="Restart">🔁 Restart</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="pause" class="pill" aria-label="Pause">⏸️ Pause</button>
+      <button id="restart" class="pill" aria-label="Restart">🔁 Restart</button>
     </div>
   </header>
 
@@ -70,529 +66,431 @@
   </div>
 
   <footer>
-    <button class="bigbtn" id="btnUp" aria-label="Jump Up">⬆️ Jump</button>
-    <div id="hint">Tap Start to enable audio. Tap Jump to clear bigger jumps and tires. 💨 Dash gives a short boost.</div>
+    <button class="bigbtn" id="btnJump" aria-label="Jump">⬆️ Jump</button>
     <button class="bigbtn" id="btnDash" aria-label="Dash">💨 Dash</button>
+    <div id="hint">“Levels” mode: chase the golden ball 🎾 — clear the target number of jumps to reach it. “Endless” mode: run forever for high score.</div>
   </footer>
 </div>
 
-<!-- Start overlay -->
-<div id="startOverlay">
+<!-- Overlays -->
+<div id="startOverlay" class="overlay">
   <div class="panel">
     <h2>Border Collie Agility</h2>
-    <p>Tap Start to enable sound and music on iPhone and iPad.</p>
-    <button id="startBtn">Start with Sound</button>
-    <div style="margin-top:8px"><button id="startMuted">Start Muted</button></div>
+    <p>Tap Start to enable sound/music on iPhone and iPad.</p>
+    <div class="row">
+      <button id="startBtn" class="modebtn">▶️ Start with Sound</button>
+      <button id="startMuted" class="modebtn">🔇 Start Muted</button>
+    </div>
+    <hr style="margin:12px 0;opacity:.2">
+    <div>Choose a mode after starting.</div>
+  </div>
+</div>
+
+<div id="modeOverlay" class="overlay" style="display:none">
+  <div class="panel">
+    <h2>Choose a Mode</h2>
+    <div class="row">
+      <button id="chooseLevels" class="modebtn">🎯 Levels (Chase the Ball)</button>
+      <button id="chooseEndless" class="modebtn">♾️ Endless</button>
+    </div>
   </div>
 </div>
 
 <script>
 (() => {
-  // Optional data URI for a built-in head. You can also use the 📷 button to load one.
-  let DOG_HEAD_SRC = "";
-
+  // ---- Canvas & UI ----
   const cv = document.getElementById('game');
   const ctx = cv.getContext('2d');
   const scoreEl = document.getElementById('score');
-  const bestEl = document.getElementById('best');
-  const pauseBtn = document.getElementById('pause');
-  const restartBtn = document.getElementById('restart');
-  const btnUp = document.getElementById('btnUp');
+  const scoreWrap = document.getElementById('scoreWrap');
+  const modeBtn = document.getElementById('mode');
+  const modeNameEl = document.getElementById('modeName');
+  const btnJump = document.getElementById('btnJump');
   const btnDash = document.getElementById('btnDash');
   const soundBtn = document.getElementById('sound');
   const musicBtn = document.getElementById('music');
+  const pauseBtn = document.getElementById('pause');
+  const restartBtn = document.getElementById('restart');
   const startOverlay = document.getElementById('startOverlay');
+  const modeOverlay = document.getElementById('modeOverlay');
   const startBtn = document.getElementById('startBtn');
   const startMuted = document.getElementById('startMuted');
-  const dogFile = document.getElementById('dogFile');
+  const chooseLevels = document.getElementById('chooseLevels');
+  const chooseEndless = document.getElementById('chooseEndless');
 
-  // WebAudio
-  let ac = null, masterGain = null, sfxOn = false, musicOn = false, musicTimer = null;
-  function ensureAudio() {
-    if (ac) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    ac = new AudioCtx();
-    masterGain = ac.createGain();
-    masterGain.gain.value = 0.9;
-    masterGain.connect(ac.destination);
+  // ---- Audio (WebAudio, gated by user gesture) ----
+  let ac=null, master=null, sfxOn=false, musicOn=false, musicTimer=null;
+  function ensureAudio(){ if(ac) return; const C=window.AudioContext||window.webkitAudioContext; ac=new C(); master=ac.createGain(); master.gain.value=.9; master.connect(ac.destination); }
+  function playBeep(a,b,d,shape='sine',vol=.7){
+    if(!sfxOn) return; ensureAudio();
+    const now=ac.currentTime, o=ac.createOscillator(), g=ac.createGain();
+    o.type=shape; o.connect(g); g.connect(master);
+    o.frequency.setValueAtTime(a,now); o.frequency.exponentialRampToValueAtTime(b, now+d);
+    g.gain.setValueAtTime(.0001,now); g.gain.exponentialRampToValueAtTime(vol, now+.02); g.gain.exponentialRampToValueAtTime(.0001, now+d);
+    o.start(now); o.stop(now+d+.02);
   }
-  function enableSound() {
-    ensureAudio();
-    if (ac.state === 'suspended') ac.resume();
-    sfxOn = true; soundBtn.textContent = '🔊 Sound: On';
+  const SFX={ jump(){playBeep(700,420,.14,'triangle',.6)}, score(){playBeep(1000,700,.10,'sine',.5)}, dash(){playBeep(220,140,.16,'square',.5)}, fail(){playBeep(160,90,.22,'sine',.7)}, land(){playBeep(300,180,.09,'sine',.5)}, level(){playBeep(600,900,.25,'sawtooth',.4)} };
+  function toggleMusic(){
+    if(!musicOn){ ensureAudio();
+      const tempo=120, beat=60/tempo; let step=0;
+      const bass=ac.createOscillator(), f=ac.createBiquadFilter(), g=ac.createGain();
+      bass.type='triangle'; f.type='lowpass'; f.frequency.value=900; g.gain.value=0.0; bass.connect(f); f.connect(g); g.connect(master); bass.start();
+      const seq=[0,3,5,7,5,3,0,-2]; function tick(){ if(!musicOn) return; const now=ac.currentTime; const n=seq[step%seq.length]; const freq=110*Math.pow(2,n/12);
+        f.frequency.setValueAtTime(900+(step%4)*150, now);
+        g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.22, now+.01); g.gain.exponentialRampToValueAtTime(.0001, now+beat*.9);
+        bass.frequency.setValueAtTime(freq, now); step++; musicTimer=setTimeout(tick, beat*1000); }
+      musicOn=true; musicBtn.classList.add('on'); musicBtn.textContent='🎵 Music On'; tick();
+    } else { musicOn=false; musicBtn.classList.remove('on'); musicBtn.textContent='🎵 Music'; if(musicTimer) clearTimeout(musicTimer); }
   }
-  function sfx(type) {
-    if (!sfxOn) return;
-    ensureAudio();
-    const now = ac.currentTime;
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.connect(gain); gain.connect(masterGain);
-    let f1=440, f2=220, dur=0.18;
-    if (type==='jump') { f1=660; f2=440; dur=0.16; }
-    if (type==='score') { f1=880; f2=660; dur=0.10; }
-    if (type==='dash') { f1=200; f2=120; dur=0.20; }
-    if (type==='fail') { f1=140; f2=90; dur=0.25; }
-    if (type==='land') { f1=280; f2=170; dur=0.09; }
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(f1, now);
-    osc.frequency.exponentialRampToValueAtTime(f2, now + dur);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.7, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-    osc.start(now);
-    osc.stop(now + dur + 0.02);
-  }
-  function toggleMusic() {
-    if (!musicOn) {
-      ensureAudio();
-      const tempo = 118;
-      const beat = 60/tempo;
-      const notes = [0, 4, 7, 9, 7, 4, 0, -3];
-      let step = 0;
-      const osc = ac.createOscillator();
-      const filt = ac.createBiquadFilter();
-      const g = ac.createGain();
-      osc.type='triangle';
-      filt.type='lowpass'; filt.frequency.value=1200;
-      g.gain.value=0.0;
-      osc.connect(filt); filt.connect(g); g.connect(masterGain);
-      osc.start();
-      function tick() {
-        if (!musicOn) return;
-        const now = ac.currentTime;
-        const f = 220 * Math.pow(2, notes[step%notes.length]/12);
-        filt.frequency.setValueAtTime(1000 + (step%4)*200, now);
-        g.gain.cancelScheduledValues(now);
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + beat*0.9);
-        osc.frequency.setValueAtTime(f, now);
-        step++;
-        musicTimer = setTimeout(tick, beat*1000);
-      }
-      musicOn = true;
-      musicBtn.textContent = '🎵 Music: On';
-      tick();
-    } else {
-      musicOn = false;
-      musicBtn.textContent = '🎵 Music: Off';
-      if (musicTimer) clearTimeout(musicTimer);
-    }
-  }
-  soundBtn.addEventListener('click', () => { ensureAudio(); if (ac.state === 'suspended') ac.resume(); sfxOn = !sfxOn; soundBtn.textContent = sfxOn ? '🔊 Sound: On' : '🔊 Sound: Off'; });
-  musicBtn.addEventListener('click', () => { ensureAudio(); if (ac.state === 'suspended') ac.resume(); toggleMusic(); });
-  startBtn.addEventListener('click', () => { enableSound(); startOverlay.remove(); });
-  startMuted.addEventListener('click', () => { startOverlay.remove(); });
+  soundBtn.addEventListener('click',()=>{ ensureAudio(); if(ac.state==='suspended') ac.resume(); sfxOn=!sfxOn; soundBtn.classList.toggle('on', sfxOn); soundBtn.textContent=sfxOn?'🔊 Sound On':'🔊 Sound'; });
+  musicBtn.addEventListener('click',()=>{ ensureAudio(); if(ac.state==='suspended') ac.resume(); toggleMusic(); });
 
-  // Load dog photo at runtime
-  const headImg = new Image();
-  let headReady = false;
-  function setDogSrc(src) { DOG_HEAD_SRC = src || ""; headImg.src = DOG_HEAD_SRC; }
-  headImg.onload = () => headReady = true;
-  headImg.onerror = () => { headReady = false; };
-  if (DOG_HEAD_SRC) headImg.src = DOG_HEAD_SRC;
-  dogFile.addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const reader = new FileReader(); reader.onload = ev => setDogSrc(ev.target.result); reader.readAsDataURL(f); });
+  startBtn.addEventListener('click',()=>{ ensureAudio(); if(ac.state==='suspended') ac.resume(); sfxOn=true; soundBtn.classList.add('on'); soundBtn.textContent='🔊 Sound On'; startOverlay.style.display='none'; modeOverlay.style.display='grid'; });
+  startMuted.addEventListener('click',()=>{ startOverlay.style.display='none'; modeOverlay.style.display='grid'; });
 
-  // Responsive canvas
-  function fitCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.floor(window.innerWidth * dpr);
-    const h = Math.floor((window.innerHeight - 210) * dpr);
-    cv.width = Math.max(1000, Math.min(1600, w));
-    cv.height = Math.max(520, Math.min(980, h));
-  }
-  fitCanvas();
-  window.addEventListener('resize', fitCanvas);
+  // ---- Responsive canvas ----
+  function fit(){ const dpr=Math.min(window.devicePixelRatio||1,2); const w=Math.floor(window.innerWidth*dpr), h=Math.floor((window.innerHeight-210)*dpr); cv.width=Math.max(1000,Math.min(1600,w)); cv.height=Math.max(520,Math.min(980,h)); }
+  fit(); addEventListener('resize',fit);
 
-  // Game state
-  let running = true, gameOver = false, t = 0, speed = 6.4, score = 0;
-  let best = +localStorage.getItem('agilityBestPolish') || 0; bestEl.textContent = best;
-  const gravity = 0.60;
-  let grace = 120; // ~2 seconds invincibility at start
-  let shake = 0;   // camera shake frames on landing
+  // ---- Game State ----
+  const MODE={ LEVELS:'levels', ENDLESS:'endless' };
+  let mode=MODE.LEVELS; modeNameEl.textContent='Levels';
+  modeBtn.addEventListener('click', ()=>{ modeOverlay.style.display='grid'; });
+  chooseLevels.addEventListener('click',()=>{ mode=MODE.LEVELS; modeNameEl.textContent='Levels'; reset(true); modeOverlay.style.display='none'; });
+  chooseEndless.addEventListener('click',()=>{ mode=MODE.ENDLESS; modeNameEl.textContent='Endless'; reset(true); modeOverlay.style.display='none'; });
 
-  // Player
-  const player = {
-    x: 240, y: 0, vy: 0, w: 120, h: 84,
-    baseY: 0, onGround: true, dash: 0, runPhase: 0, tilt: 0, squash: 0
-  };
+  let running=true, gameOver=false, t=0, speed=6.6, score=0, grace=120, shake=0;
+  let jumpsCleared=0, level=1, goal=10, throwing=false, ballX=-60, ballY=140, ballSpin=0, ballIdle=false;
+
+  const gravity=.62;
+
+  // Player (dog) with proper body & 4 legs
+  const dog={ x:260, y:0, vy:0, w:140, h:92, baseY:0, onGround:true, dash:0, run:0, tilt:0, squash:0 };
 
   // Background
-  let clouds = makeClouds();
-  let hills = makeHills();
-  let grassBlades = makeGrass();
+  let clouds=makeClouds(), hills=makeHills(), grass=makeGrass();
+  function makeClouds(){ const a=[]; for(let i=0;i<6;i++) a.push({x:Math.random()*cv.width,y:30+Math.random()*cv.height*.35,r:20+Math.random()*40,s:.15+Math.random()*.35}); return a; }
+  function makeHills(){ return [{x:0,y:cv.height*.56,c:'#8BC34A',speed:.32,bumps:bumps(6,170,76)}, {x:0,y:cv.height*.64,c:'#66BB6A',speed:.62,bumps:bumps(7,130,60)}]; }
+  function bumps(n,w,h){ const a=[]; for(let i=0;i<n;i++) a.push({w,h:h*(.6+Math.random()*.8)}); return a; }
+  function makeGrass(){ const a=[]; for(let i=0;i<120;i++) a.push({x:Math.random()*cv.width,s:Math.random()*Math.PI*2}); return a; }
 
-  function makeClouds() { const arr=[]; for (let i=0;i<6;i++) arr.push({x: Math.random()*cv.width, y: 30+Math.random()*cv.height*0.35, r: 20+Math.random()*40, s: 0.15+Math.random()*0.35}); return arr; }
-  function makeHills() { return [
-      { x:0, y: cv.height*0.56, c:'#8BC34A', speed: 0.32, bumps: genBumps(6, 170, 76) },
-      { x:0, y: cv.height*0.64, c:'#66BB6A', speed: 0.62, bumps: genBumps(7, 130, 60) }
-    ]; }
-  function genBumps(n, w, h) { const a=[]; for (let i=0;i<n;i++) a.push({w, h: h*(0.6+Math.random()*0.8)}); return a; }
-  function makeGrass() { const a=[]; for (let i=0;i<110;i++) a.push({x: Math.random()*cv.width, sway: Math.random()*Math.PI*2}); return a; }
-
-  // Obstacles (no tunnels)
-  const TYPES = ['jump','tire','panel','weave'];
-  let obstacles = [];
-  let spawnTimer = 150; // give a run-up
+  // Jumps-only obstacles
+  let obstacles=[], spawnTimer=160;
 
   // Particles
-  const particles = [];
-  function puff(x,y,dir=1, color='#e6e6e6', n=10) { for (let i=0;i<n;i++) particles.push({x, y, vx:(Math.random()*2+1)*dir, vy:-Math.random()*2-0.5, life: 30+Math.random()*20, color}); }
+  const parts=[];
+  function puff(x,y,dir=1,color='#a5d6a7',n=12){ for(let i=0;i<n;i++) parts.push({x,y,vx:(Math.random()*2+1)*dir,vy:-Math.random()*2-.5,life:30+Math.random()*20,color}); }
 
-  function reset() {
-    running = true; gameOver = false; t = 0; speed = 6.4; score = 0; scoreEl.textContent = '0';
-    grace = 120; shake = 0;
-    clouds = makeClouds(); hills = makeHills(); grassBlades = makeGrass();
-    obstacles = []; spawnTimer = 150;
-    player.baseY = cv.height * 0.72; player.y = player.baseY; player.vy = 0; player.onGround = true; player.dash = 0; player.tilt = 0; player.squash = 0;
+  // ---- Reset / Level Mgmt ----
+  function reset(full=false){
+    running=true; gameOver=false; t=0; score= full?0:score; updateScore(0,true);
+    speed=6.6; grace=120; shake=0; jumpsCleared=0;
+    if(full && mode===MODE.LEVELS){ level=1; goal=10; }
+    clouds=makeClouds(); hills=makeHills(); grass=makeGrass();
+    obstacles=[]; spawnTimer=160;
+    dog.baseY=cv.height*.72; dog.y=dog.baseY; dog.vy=0; dog.onGround=true; dog.dash=0; dog.tilt=0; dog.squash=0; dog.run=0;
+    if(mode===MODE.LEVELS){ startThrow(); }
+    else { ballIdle=false; throwing=false; }
   }
 
-  function spawnObstacle() {
-    const r = Math.random();
-    let type = 'jump';
-    if (r < 0.55) type = 'jump';
-    else if (r < 0.8) type = 'panel';
-    else if (r < 0.93) type = 'tire';
-    else type = 'weave';
-
-    const baseY = player.baseY;
-    if (type === 'jump') obstacles.push({ type, x: cv.width+40, y: baseY-46, w: 92, h: 46, scored:false }); // bigger
-    if (type === 'panel') obstacles.push({ type, x: cv.width+40, y: baseY-70, w: 86, h: 70, scored:false });
-    if (type === 'tire') obstacles.push({ type, x: cv.width+40, y: baseY-104, w: 82, h: 104, scored:false });
-    if (type === 'weave') {
-      const n=6, poles=[]; for (let i=0;i<n;i++) poles.push({x: cv.width+40+i*34, y: baseY-64, w: 8, h: 64});
-      obstacles.push({ type, x: cv.width+40, y: baseY-64, w: n*34, h: 64, poles, scored:false });
-    }
+  function startThrow(){
+    // animate ball left->right across the sky, then park at right edge spinning
+    throwing=true; ballIdle=false;
+    ballX=-60; ballY=cv.height*.22; ballSpin=0;
   }
 
-  // Controls
-  function jump() {
-    if (gameOver || !running) return;
-    if (player.onGround) {
-      player.vy = -14.2;
-      player.onGround = false;
-      player.runPhase = 0;
-      sfx('jump');
-      if (navigator.vibrate) navigator.vibrate(10);
-    }
-  }
-  function dash() {
-    if (gameOver || !running) return;
-    if (player.dash <= 0) {
-      player.dash = 18;
-      sfx('dash');
-      if (navigator.vibrate) navigator.vibrate(8);
-    }
+  function levelUp(){
+    SFX.level();
+    level++;
+    const inc = 5 + Math.floor(Math.random()*5); // +5..+9
+    goal += inc;
+    reset(false);
+    startThrow();
   }
 
-  // UI events
-  btnUp.addEventListener('touchstart', e => { e.preventDefault(); jump(); }, {passive:false});
-  btnDash.addEventListener('touchstart', e => { e.preventDefault(); dash(); }, {passive:false});
-  window.addEventListener('keydown', e => {
-    if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') jump();
-    else if (e.code === 'KeyD') dash();
-    else if (e.code === 'KeyP') togglePause();
-  });
-  pauseBtn.addEventListener('click', () => togglePause());
-  restartBtn.addEventListener('click', () => reset());
-  function togglePause() { running = !running; pauseBtn.textContent = running ? '⏸️ Pause' : '▶️ Resume'; }
+  // ---- Controls ----
+  function jump(){ if(gameOver||!running) return; if(dog.onGround){ dog.vy=-15; dog.onGround=false; dog.run=0; SFX.jump(); if(navigator.vibrate) navigator.vibrate(8); } }
+  function dash(){ if(gameOver||!running) return; if(dog.dash<=0){ dog.dash=18; SFX.dash(); if(navigator.vibrate) navigator.vibrate(6); } }
 
-  // Utils
-  function rectsOverlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+  btnJump.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+  btnDash.addEventListener('touchstart',e=>{e.preventDefault();dash();},{passive:false});
+  window.addEventListener('keydown',e=>{ if(e.code==='ArrowUp'||e.code==='Space'||e.code==='KeyW') jump(); else if(e.code==='KeyD') dash(); else if(e.code==='KeyP') togglePause(); });
+  pauseBtn.addEventListener('click',()=>togglePause());
+  restartBtn.addEventListener('click',()=>reset(true));
+  function togglePause(){ running=!running; pauseBtn.textContent=running?'⏸️ Pause':'▶️ Resume'; }
 
-  // Fancy background
-  function drawSunAndClouds() {
-    const r = 46;
-    ctx.beginPath(); ctx.arc(cv.width - 110, 90, r, 0, Math.PI * 2); ctx.fillStyle = '#FFD166'; ctx.fill();
-    clouds.forEach(c => { c.x -= c.s; if (c.x < -160) { c.x = cv.width + 160; c.y = 30 + Math.random()*cv.height*0.35; } drawCloud(c.x, c.y, c.r); });
+  // ---- Drawing helpers ----
+  function drawCloudsSun(){
+    const r=46; ctx.beginPath(); ctx.arc(cv.width-110,90,r,0,Math.PI*2); ctx.fillStyle='#FFD166'; ctx.fill();
+    clouds.forEach(c=>{ c.x-=c.s; if(c.x<-160){ c.x=cv.width+160; c.y=30+Math.random()*cv.height*.35; } drawCloud(c.x,c.y,c.r);});
   }
-  function drawCloud(x,y,r) {
-    ctx.fillStyle = 'rgba(255,255,255,.96)';
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-    ctx.arc(x+r, y+10, r*0.8, 0, Math.PI*2);
-    ctx.arc(x-r, y+10, r*0.85, 0, Math.PI*2);
-    ctx.arc(x, y+18, r*0.9, 0, Math.PI*2);
-    ctx.fill();
-  }
-  function drawHills() {
-    const sh = shake ? (Math.random()*shake - shake/2) : 0;
-    ctx.save(); ctx.translate(0, sh);
-    hills.forEach(layer => {
-      layer.x -= layer.speed * (speed*0.6);
-      if (layer.x < -cv.width) layer.x += cv.width;
-      const y = layer.y;
-      ctx.fillStyle = layer.c;
-      for (let k=0;k<2;k++) {
-        const xOffset = layer.x + k*cv.width;
-        ctx.beginPath();
-        ctx.moveTo(xOffset, cv.height);
-        let x = xOffset;
-        for (let i=0;i<layer.bumps.length;i++) {
-          const b = layer.bumps[i];
-          const w = b.w, h = b.h;
-          ctx.bezierCurveTo(x + w*0.3, y - h, x + w*0.7, y + h*0.2, x + w, y);
-          x += w;
-        }
-        ctx.lineTo(xOffset + cv.width, cv.height);
-        ctx.closePath();
-        ctx.fill();
-      }
-    });
+  function drawCloud(x,y,r){ ctx.fillStyle='rgba(255,255,255,.96)'; ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2); ctx.arc(x+r,y+10,r*.8,0,Math.PI*2); ctx.arc(x-r,y+10,r*.85,0,Math.PI*2); ctx.arc(x,y+18,r*.9,0,Math.PI*2); ctx.fill(); }
+  function drawHills(){
+    const sh=shake?(Math.random()*shake - shake/2):0; ctx.save(); ctx.translate(0,sh);
+    hills.forEach(L=>{ L.x-=L.speed*(speed*.6); if(L.x<-cv.width) L.x+=cv.width; const y=L.y; ctx.fillStyle=L.c;
+      for(let k=0;k<2;k++){ const xo=L.x+k*cv.width; ctx.beginPath(); ctx.moveTo(xo,cv.height); let x=xo;
+        for(let i=0;i<L.bumps.length;i++){ const b=L.bumps[i]; ctx.bezierCurveTo(x+b.w*.3,y-b.h,x+b.w*.7,y+b.h*.2,x+b.w,y); x+=b.w; }
+        ctx.lineTo(xo+cv.width,cv.height); ctx.closePath(); ctx.fill(); }});
     ctx.restore();
   }
-  function drawGround() {
-    const gy = player.baseY + 26;
-    ctx.fillStyle = '#3fa649';
-    ctx.fillRect(0, gy, cv.width, cv.height - gy);
-    ctx.fillStyle = 'rgba(255,255,255,.8)';
-    ctx.fillRect(0, player.baseY + 4, cv.width, 3);
-    grassBlades.forEach(g => {
-      g.x -= speed*0.8; if (g.x < -4) g.x = cv.width + Math.random()*40;
-      const sway = Math.sin(t*0.08 + g.sway)*4;
-      ctx.strokeStyle = '#2e7d32'; ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(g.x, gy);
-      ctx.quadraticCurveTo(g.x + sway, gy-16, g.x + sway*0.4, gy-28);
-      ctx.stroke();
-    });
+  function drawGround(){
+    const gy=dog.baseY+26; ctx.fillStyle='#3fa649'; ctx.fillRect(0,gy,cv.width,cv.height-gy);
+    ctx.fillStyle='rgba(255,255,255,.8)'; ctx.fillRect(0,dog.baseY+4,cv.width,3);
+    grass.forEach(g=>{ g.x-=speed*.8; if(g.x<-4) g.x=cv.width+Math.random()*40; const sw=Math.sin(t*.08+g.s)*4;
+      ctx.strokeStyle='#2e7d32'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(g.x,gy); ctx.quadraticCurveTo(g.x+sw,gy-16,g.x+sw*.4,gy-28); ctx.stroke();});
   }
 
-  // Dog drawing with nicer features and squash
-  const FACE = { eye:'#111', muzzle:'#eee' };
-  function drawDog() {
-    const x = player.x, y = player.y;
-    const baseW = player.w, baseH = player.h;
-    const squash = 1 + Math.max(0, player.squash);   // >1 widen on land
-    const stretch = 1 - Math.max(0, player.squash)*0.6;
-
-    const w = baseW * squash;
-    const h = baseH * stretch;
+  function drawDog(){
+    const x=dog.x, y=dog.y;
+    const squash=1+Math.max(0,dog.squash), stretch=1-Math.max(0,dog.squash)*.55;
+    const w=dog.w*squash, h=dog.h*stretch;
 
     ctx.save();
-    if (shake) ctx.translate((Math.random()*shake - shake/2), (Math.random()*shake - shake/2));
-    ctx.translate(x, y);
-    ctx.rotate(player.tilt);
+    if(shake) ctx.translate((Math.random()*shake-shake/2),(Math.random()*shake-shake/2));
+    ctx.translate(x,y); ctx.rotate(dog.tilt);
 
     // shadow
-    ctx.fillStyle = 'rgba(0,0,0,.22)';
-    const shw = Math.max(30, w*0.55) * (player.onGround ? 1 : 0.7);
-    ctx.beginPath(); ctx.ellipse(0, h+16, shw, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.22)';
+    const shw=Math.max(32,w*.58)*(dog.onGround?1:.7);
+    ctx.beginPath(); ctx.ellipse(0,h+16,shw,12,0,0,Math.PI*2); ctx.fill();
 
-    // body
-    ctx.fillStyle = '#111';
-    ctx.beginPath(); ctx.ellipse(0, h*0.55, w*0.58, h*0.5, 0, 0, Math.PI*2); ctx.fill();
+    // torso
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(0,h*.55,w*.60,h*.50,0,0,Math.PI*2); ctx.fill();
+    // chest blaze
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(-w*.1,h*.7,w*.24,h*.28,0,0,Math.PI*2); ctx.fill();
 
-    // chest
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(-w*0.1, h*0.7, w*0.25, h*0.28, 0, 0, Math.PI*2); ctx.fill();
-
-    // legs
-    const rp = player.runPhase;
-    function leg(offx, offy, flip) {
-      const swing = Math.sin(rp + (flip?Math.PI:0)) * (player.onGround? 12 : 5);
-      ctx.save(); ctx.translate(offx, offy); ctx.rotate(swing * Math.PI/180);
-      ctx.fillStyle = '#111'; ctx.fillRect(-6, 0, 12, 28);
-      ctx.fillStyle = '#fff'; ctx.fillRect(-6, 21, 12, 9);
+    // legs (front pair & rear pair)
+    const rp=dog.run;
+    function legPair(offx,offy,phase,front){
+      const swing=Math.sin(rp+phase)*(dog.onGround?14:6);
+      ctx.save(); ctx.translate(offx,offy);
+      // upper
+      ctx.rotate(swing*Math.PI/180);
+      ctx.fillStyle='#111'; ctx.fillRect(-5,0,10,22);
+      // lower
+      ctx.translate(0,22); ctx.rotate((front?-1:1)*swing*.5*Math.PI/180);
+      ctx.fillStyle='#111'; ctx.fillRect(-4,0,8,18);
+      // paw (white)
+      ctx.fillStyle='#fff'; ctx.fillRect(-5,16,10,7);
       ctx.restore();
     }
-    leg(-w*0.18, h*0.62, false);
-    leg(w*0.02, h*0.62, true);
+    legPair(-w*.20,h*.58,0,true);  // front L
+    legPair(-w*.02,h*.58,Math.PI,true); // front R
+    legPair(w*.06,h*.62,Math.PI,false); // rear L
+    legPair(w*.22,h*.62,0,false);  // rear R
 
     // tail wag
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 6;
-    const wag = Math.sin(t*0.35)*0.40;
-    ctx.save(); ctx.translate(-w*0.44, h*0.62); ctx.rotate(wag);
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-w*0.22, -10, w*0.1, -18); ctx.stroke();
-    ctx.restore();
+    ctx.strokeStyle='#111'; ctx.lineWidth=6;
+    const wag=Math.sin(t*.35)*.40;
+    ctx.save(); ctx.translate(-w*.44,h*.6); ctx.rotate(wag);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-w*.22,-10,w*.1,-18); ctx.stroke(); ctx.restore();
 
-    // head either photo or stylized with muzzle and eye
-    const headW = w*0.35, headH = h*0.28;
+    // head (stylized but “doggier”)
+    const headW=w*.34, headH=h*.27;
     ctx.save();
-    ctx.translate(w*0.36, h*0.32 + Math.sin(t*0.22)*1.6);
-    ctx.beginPath(); ctx.ellipse(0, 0, headW*0.9, headH*0.95, 0, 0, Math.PI*2); ctx.clip();
-    if (headReady && DOG_HEAD_SRC) {
-      ctx.drawImage(headImg, -headW, -headH, headW*2, headH*2);
-    } else {
-      // stylized black and white collie head with muzzle and eye
-      ctx.fillStyle = '#222'; ctx.fillRect(-headW, -headH, headW*2, headH*2);
-      // blaze
-      ctx.fillStyle = '#fff'; ctx.fillRect(-5, -headH*0.8, 10, headH*1.6);
-      // muzzle
-      ctx.fillStyle = FACE.muzzle; ctx.fillRect(headW*0.05, headH*0.1, headW*0.5, headH*0.4);
-      // eye
-      ctx.fillStyle = FACE.eye; ctx.beginPath(); ctx.arc(headW*0.15, -headH*0.1, 4, 0, Math.PI*2); ctx.fill();
-    }
+    ctx.translate(w*.38,h*.30 + Math.sin(t*.22)*1.6);
+    // ear
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.moveTo(-headW*.05,-headH*.4); ctx.lineTo(headW*.12,-headH*.62); ctx.lineTo(headW*.08,-headH*.18); ctx.closePath(); ctx.fill();
+    // skull
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(0,0,headW*.95,headH*.95,0,0,Math.PI*2); ctx.fill();
+    // blaze
+    ctx.fillStyle='#fff'; ctx.fillRect(-4,-headH*.7,8,headH*1.4);
+    // muzzle
+    ctx.fillStyle='#eee'; ctx.beginPath(); ctx.ellipse(headW*.12, headH*.05, headW*.45, headH*.30, 0, 0, Math.PI*2); ctx.fill();
+    // nose
+    ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(headW*.38, headH*.1, 4,3,0,0,Math.PI*2); ctx.fill();
+    // eye
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(headW*.05,-headH*.12,4,0,Math.PI*2); ctx.fill();
     ctx.restore();
-
-    // ear triangle
-    ctx.fillStyle = '#111';
-    ctx.beginPath(); ctx.moveTo(w*0.28, h*0.12); ctx.lineTo(w*0.42, 0); ctx.lineTo(w*0.36, h*0.24); ctx.closePath(); ctx.fill();
 
     ctx.restore();
   }
 
-  function drawObstacle(o) {
+  function drawJump(o){
     ctx.save();
-    // shadow
-    ctx.fillStyle = 'rgba(0,0,0,.15)';
-    ctx.beginPath(); ctx.ellipse(o.x + o.w*0.5, player.baseY + 24, Math.max(22,o.w*0.4), 10, 0, 0, Math.PI*2); ctx.fill();
+    // ground shadow
+    ctx.fillStyle='rgba(0,0,0,.15)';
+    ctx.beginPath(); ctx.ellipse(o.x+o.w*.5, dog.baseY+24, Math.max(24,o.w*.42), 10, 0, 0, Math.PI*2); ctx.fill();
 
-    if (o.type === 'jump') {
-      ctx.fillStyle = '#e53935'; ctx.fillRect(o.x, o.y, 12, 52); ctx.fillRect(o.x + o.w - 12, o.y, 12, 52);
-      ctx.fillStyle = '#1565c0'; for (let i=0;i<5;i++) ctx.fillRect(o.x+12, o.y+8+i*9, o.w-24, 3);
-      ctx.fillStyle = '#fff'; ctx.fillRect(o.x+12, o.y+14, o.w-24, 6);
-      // caps
-      ctx.fillStyle = '#b71c1c'; ctx.fillRect(o.x-2, o.y-4, 16, 6); ctx.fillRect(o.x+o.w-14, o.y-4, 16, 6);
-    } else if (o.type === 'panel') {
-      ctx.fillStyle = varColor('--panelBlue'); // helper below
-      ctx.fillRect(o.x, o.y, o.w, o.h);
-      ctx.fillStyle = '#fff'; ctx.fillRect(o.x, o.y + o.h*0.45, o.w, 6);
-      ctx.strokeStyle = varColor('--panelDark'); ctx.lineWidth = 3; ctx.strokeRect(o.x, o.y, o.w, o.h);
-    } else if (o.type === 'tire') {
-      ctx.fillStyle = '#455A64'; ctx.fillRect(o.x+32, o.y, 10, o.h); ctx.fillRect(o.x+o.w-42, o.y, 10, o.h);
-      ctx.beginPath(); ctx.lineWidth = 14; ctx.strokeStyle = varColor('--tireDark'); ctx.arc(o.x + o.w/2, o.y + o.h/2, 32, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.lineWidth = 5; ctx.strokeStyle = '#9e9e9e'; ctx.arc(o.x + o.w/2, o.y + o.h/2, 20, 0, Math.PI*2); ctx.stroke();
-    } else if (o.type === 'weave') {
-      o.poles.forEach((p, i) => { ctx.fillStyle = i % 2 ? '#1976d2' : '#ffffff'; ctx.fillRect(p.x, p.y, p.w, p.h); });
-    }
+    // posts
+    ctx.fillStyle=getVar('--postRed'); ctx.fillRect(o.x, o.y, 12, o.h);
+    ctx.fillRect(o.x+o.w-12, o.y, 12, o.h);
+    ctx.fillStyle=getVar('--postDark'); ctx.fillRect(o.x-2, o.y-6, 16, 6);
+    ctx.fillRect(o.x+o.w-14, o.y-6, 16, 6);
+
+    // bar (striped)
+    const barY = o.y + 16 + Math.sin(o.bounce)*1.5;
+    ctx.fillStyle='#fff'; ctx.fillRect(o.x+12, barY, o.w-24, 8);
+    ctx.fillStyle='#1565c0';
+    for(let i=0;i<Math.floor((o.w-24)/12);i+=2) ctx.fillRect(o.x+12+i*12, barY, 12, 8);
+
     ctx.restore();
   }
-  function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name) || '#000'; }
 
-  function update() {
-    if (!running || gameOver) return;
-    t++; speed += 0.0009;
-    if (grace > 0) grace--;
-    if (shake > 0) shake--;
+  function drawBall(){
+    if(!(throwing||ballIdle)) return;
+    ctx.save();
+    const r=18;
+    const x=ballIdle? (cv.width-60) : ballX;
+    const y=ballIdle? (dog.baseY-90) : ballY;
+    // glow
+    ctx.beginPath(); ctx.arc(x,y,r+8,0,Math.PI*2); ctx.fillStyle='rgba(255,204,51,.25)'; ctx.fill();
+    // body
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=getVar('--gold'); ctx.fill();
+    ctx.strokeStyle=getVar('--goldDark'); ctx.lineWidth=3; ctx.stroke();
+    // spin seam
+    ctx.save(); ctx.translate(x,y); ctx.rotate(ballSpin);
+    ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(0,0,r*.7,r*.35,0,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
 
-    // spawn cadence
-    spawnTimer--;
-    if (spawnTimer <= 0) {
-      spawnObstacle();
-      // dynamic spacing
-      spawnTimer = 100 + Math.max(0, 120 - speed*10) | 0;
-    }
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#000'; }
 
-    // move obstacles
-    obstacles.forEach(o => { const extra = (player.dash>0?2.6:0); o.x -= speed + extra; if (o.type==='weave') o.poles.forEach(p => p.x -= speed + extra); });
-    obstacles = obstacles.filter(o => o.x + o.w > -60);
+  // ---- Update Loop ----
+  function update(){
+    if(!running||gameOver) return;
+    t++; speed+=0.0009; if(grace>0) grace--; if(shake>0) shake--;
 
-    // physics
-    if (player.dash>0) player.dash--;
-    player.vy += player.onGround ? 0 : gravity;
-    player.y += player.vy;
-
-    // landing
-    if (player.y >= player.baseY) {
-      if (!player.onGround) {
-        player.y = player.baseY; player.vy = 0; player.onGround = true;
-        player.squash = 0.35; // quick squash
-        shake = 6;           // little camera shake
-        sfx('land');
-        // green grass puffs
-        for (let k=0;k<2;k++) puff(player.x-8+k*8, player.baseY+8, -1 + k, '#a5d6a7', 12);
+    // Ball anim
+    if(mode===MODE.LEVELS){
+      if(throwing){
+        ballX += 10; ballSpin += 0.25;
+        if(ballX > cv.width-60){ throwing=false; ballIdle=true; ballSpin=0; }
+      } else if(ballIdle){
+        ballSpin += 0.15;
       }
-      player.y = player.baseY;
-    } else {
-      player.onGround = false;
-      player.squash *= 0.9;
     }
 
-    player.tilt = player.onGround ? Math.sin(t*0.06)*0.02 : (player.vy<0 ? -0.07 : 0.06);
-    if (player.onGround) player.runPhase += 0.28 + speed*0.012;
+    // Spawning (jumps only)
+    spawnTimer--;
+    if(spawnTimer<=0){
+      spawnJump();
+      const base=mode===MODE.LEVELS? 98 : 90;
+      spawnTimer = base + Math.max(0, 120 - speed*10) | 0;
+    }
 
-    // forgiving hitbox
-    const hb = {
-      x: player.x - player.w*0.38,
-      y: player.y - player.h*0.40,
-      w: player.w*0.76,
-      h: player.h*0.64
-    };
+    // Move obstacles
+    obstacles.forEach(o=>{ const extra=(dog.dash>0?2.7:0); o.x -= speed + extra; o.bounce += 0.25; });
+    obstacles = obstacles.filter(o=>o.x + o.w > -60);
 
-    if (grace <= 0) {
-      obstacles.forEach(o => {
-        const ob = { x:o.x, y:o.y, w:o.w, h:o.h };
-        const needsJump = (o.type === 'jump' || o.type === 'tire' || o.type==='panel');
+    // Physics
+    if(dog.dash>0) dog.dash--;
+    dog.vy += dog.onGround?0:gravity;
+    dog.y += dog.vy;
 
-        // score when you pass center
+    // Land
+    if(dog.y >= dog.baseY){
+      if(!dog.onGround){
+        dog.y=dog.baseY; dog.vy=0; dog.onGround=true; dog.squash=0.35; shake=6; SFX.land();
+        puff(dog.x-10, dog.baseY+8, -1); puff(dog.x+10, dog.baseY+8, +1);
+      }
+      dog.y=dog.baseY;
+    } else { dog.onGround=false; dog.squash *= 0.9; }
+
+    dog.tilt = dog.onGround ? Math.sin(t*.06)*.02 : (dog.vy<0 ? -0.07 : 0.06);
+    if(dog.onGround) dog.run += 0.30 + speed*0.012;
+
+    // Hitbox (more forgiving)
+    const hb = { x:dog.x - dog.w*0.36, y:dog.y - dog.h*0.38, w:dog.w*0.72, h:dog.h*0.62 };
+
+    // Scoring + collision (only when grace over)
+    if(grace<=0){
+      obstacles.forEach(o=>{
+        const ob={x:o.x, y:o.y, w:o.w, h:o.h};
+        // Score when past center
         const passX = o.x + o.w/2;
-        if (!o.scored && passX < player.x - 10) { o.scored = true; score += 1; scoreEl.textContent = score; sfx('score'); }
-
-        // collision
-        if (rectsOverlap(hb, ob)) {
-          // extra mercy: if you are clearly rising and above 60 percent of obstacle height, let it slide
-          const rising = player.vy < -2;
-          const above = hb.y + hb.h < o.y + o.h*0.4;
-          if (!(needsJump && rising && above)) endGame();
+        if(!o.scored && passX < dog.x - 10){
+          o.scored=true; jumpsCleared++; updateScore(1);
+          if(mode===MODE.LEVELS && ballIdle && jumpsCleared>=goal){
+            // reached goal -> win level
+            levelUp();
+          }
+        }
+        // Collision check (mercy if clearly rising & above bar)
+        if(rects(hb, ob)){
+          const rising = dog.vy < -2;
+          const aboveBar = hb.y + hb.h < o.y + 18; // bar is around y+16
+          if(!(rising && aboveBar)) fail();
         }
       });
     }
   }
 
-  function endGame() {
-    gameOver = true; running = false;
-    let b = +localStorage.getItem('agilityBestPolish') || 0;
-    b = Math.max(b, score);
-    localStorage.setItem('agilityBestPolish', b);
-    bestEl.textContent = b;
-    pauseBtn.textContent = '▶️ Resume';
+  function rects(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y; }
+
+  function fail(){
+    gameOver=true; running=false; SFX.fail(); if(navigator.vibrate) navigator.vibrate(40);
+    pauseBtn.textContent='▶️ Resume';
     setTimeout(()=>alert('Course Fault! Try again.'), 10);
-    sfx('fail');
-    if (navigator.vibrate) navigator.vibrate(40);
   }
 
-  function drawParticles() {
-    ctx.save();
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.10; p.life--;
-      ctx.globalAlpha = Math.max(0, p.life/50);
-      ctx.fillStyle = p.color || '#e6e6e6';
-      ctx.beginPath(); ctx.ellipse(p.x, p.y, 4, 2, 0, 0, Math.PI*2); ctx.fill();
-    });
-    // cleanup
-    for (let i=particles.length-1;i>=0;i--) if (particles[i].life<=0) particles.splice(i,1);
-    ctx.globalAlpha = 1;
-    ctx.restore();
+  function spawnJump(){
+    const baseY = dog.baseY;
+    const w = 110; const h = 58; // bigger jump
+    obstacles.push({ x: cv.width+40, y: baseY - h, w, h, scored:false, bounce:0 });
   }
 
-  function drawScene() {
+  function updateScore(delta,reset=false){
+    if(reset){ scoreEl.textContent = String(score); return; }
+    score += delta;
+    scoreEl.textContent = String(score);
+    // pop animation
+    scoreWrap.classList.remove('bump');
+    void scoreWrap.offsetWidth; // reflow
+    scoreWrap.classList.add('bump');
+    setTimeout(()=>scoreWrap.classList.remove('bump'),180);
+    SFX.score();
+  }
+
+  // ---- Render ----
+  function draw(){
     ctx.clearRect(0,0,cv.width,cv.height);
-    drawSunAndClouds();
-    drawHills();
-    drawGround();
-    obstacles.forEach(drawObstacle);
+    drawCloudsSun(); drawHills(); drawGround();
+    // ball first (behind jumps visually), but bright so still visible
+    drawBall();
+    obstacles.forEach(drawJump);
     drawDog();
-    drawParticles();
 
-    if (!running) {
-      ctx.fillStyle = 'rgba(255,255,255,.88)';
-      ctx.fillRect(cv.width/2 - 220, cv.height/2 - 80, 440, 160);
-      ctx.fillStyle = '#123';
-      ctx.font = 'bold 26px -apple-system, system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText(gameOver ? 'Course Fault!' : 'Paused', cv.width/2, cv.height/2 - 8);
-      ctx.font = '16px -apple-system, system-ui';
-      ctx.fillText('Tap Jump to clear obstacles • 💨 Dash for a burst', cv.width/2, cv.height/2 + 26);
+    // Mode HUD for Levels
+    if(mode===MODE.LEVELS){
+      ctx.fillStyle='rgba(255,255,255,.9)';
+      ctx.fillRect(14,14,200,56);
+      ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.strokeRect(14,14,200,56);
+      ctx.fillStyle='#0b3d20';
+      ctx.font='bold 18px -apple-system, system-ui';
+      ctx.fillText(`Level ${level}`, 24, 38);
+      ctx.fillText(`Target: ${goal}`, 24, 62);
+      // progress bar
+      const pct = Math.min(1, jumpsCleared / goal);
+      ctx.fillStyle='rgba(11,61,32,.1)'; ctx.fillRect(120, 28, 80, 12);
+      ctx.fillStyle='#00c853'; ctx.fillRect(120, 28, Math.floor(80*pct), 12);
+      ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.strokeRect(120,28,80,12);
     }
 
-    // Get Ready banner during grace
-    if (grace > 0) {
-      ctx.fillStyle = 'rgba(255,255,255,.85)';
-      ctx.fillRect(cv.width/2 - 160, cv.height/2 - 60, 320, 120);
-      ctx.fillStyle = '#123';
-      ctx.font = 'bold 26px -apple-system, system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('Get Ready', cv.width/2, cv.height/2 - 10);
+    // Get Ready banner
+    if(grace>0){
+      ctx.fillStyle='rgba(255,255,255,.88)'; ctx.fillRect(cv.width/2-160, cv.height/2-60, 320, 120);
+      ctx.fillStyle='#123'; ctx.font='bold 26px -apple-system, system-ui'; ctx.textAlign='center';
+      ctx.fillText('Get Ready', cv.width/2, cv.height/2-10);
+    }
+
+    // Paused overlay
+    if(!running && !gameOver && grace<=0){
+      ctx.fillStyle='rgba(255,255,255,.88)'; ctx.fillRect(cv.width/2-220, cv.height/2-80, 440, 160);
+      ctx.fillStyle='#123'; ctx.font='bold 26px -apple-system, system-ui'; ctx.textAlign='center';
+      ctx.fillText('Paused', cv.width/2, cv.height/2-8);
+      ctx.font='16px -apple-system, system-ui';
+      ctx.fillText('Tap ⬆️ Jump • 💨 Dash', cv.width/2, cv.height/2+26);
     }
   }
 
-  function loop() { update(); drawScene(); requestAnimationFrame(loop); }
+  function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-  function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name) || '#000'; }
-
-  // Start
-  reset(); loop();
+  // ---- Start ----
+  reset(true); loop();
 })();
 </script>
 </body>
