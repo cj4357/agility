@@ -169,7 +169,7 @@
   // Dog (body sprite drawn in code + user head composited)
   const dog={ x:260, y:0, vy:0, w:150, h:98, baseY:0, onGround:true, dash:0, run:0, tilt:0, squash:0 };
 
-  // User head image (forward-looking); we feather/ellipse-mask it and auto-rotate slightly to look forward
+  // User head image
   const headImg=new Image(); let headReady=false;
   headFile.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if(!f) return; const reader=new FileReader(); reader.onload=ev=>{ headImg.src=ev.target.result; }; reader.readAsDataURL(f); });
   headImg.onload=()=>{ headReady=true; };
@@ -203,14 +203,15 @@
 
   function levelUp(){
     SFX.level(); level++; const inc = 5 + Math.floor(Math.random()*5); goal += inc;
-    // Slightly faster each level
     speed += 0.2;
-    // Restart run but keep score
     throwing=false; ballIdle=false; obstacles=[]; spawnTimer=9999; jumpsCleared=0; grace=90; startThrow();
   }
 
   // ===== Controls =====
-  function jump(){ if(gameOver||!running) return; if(dog.onGround){ dog.vy=-18; dog.onGround=false; dog.run=0; SFX.jump(); if(navigator.vibrate) navigator.vibrate(8); } }
+  function jump(){ if(gameOver||!running) return; if(dog.onGround){
+      dog.vy = -21.6; // +20% jump height
+      dog.onGround=false; dog.run=0; SFX.jump(); if(navigator.vibrate) navigator.vibrate(8);
+    } }
   function dash(){ if(gameOver||!running) return; if(dog.dash<=0){ dog.dash=18; SFX.dash(); if(navigator.vibrate) navigator.vibrate(6); } }
 
   btnJump.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
@@ -266,7 +267,7 @@
     // chest blaze
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(-w*.1,h*.7,w*.24,h*.28,0,0,Math.PI*2); ctx.fill();
 
-    // legs (front/rear pairs) — 8-frame feel from run phase
+    // legs (front/rear pairs)
     const rp=dog.run;
     function legPair(offx,offy,phase,front){
       const swing=Math.sin(rp+phase)*(dog.onGround?16:7);
@@ -292,27 +293,21 @@
     ctx.save(); ctx.translate(-w*.44,h*.6); ctx.rotate(wag);
     ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-w*.22,-10,w*.1,-18); ctx.stroke(); ctx.restore();
 
-    // head: use uploaded photo masked & feathered, rotated slightly toward camera
+    // head (upload + mask)
     const headW=w*.34, headH=h*.27;
     ctx.save();
     ctx.translate(w*.38, h*.30 + Math.sin(t*.22)*1.6);
-    // base head shape (for fallback/edge feather)
     ctx.beginPath(); ctx.ellipse(0,0,headW*.95,headH*.95,0,0,Math.PI*2); ctx.clip();
     if(headReady){
-      // mild rotate to "look forward" and center crop
-      ctx.save();
-      ctx.rotate(-0.08);
-      // draw image scaled to fill ellipse area
+      ctx.save(); ctx.rotate(-0.08);
       const iw=headW*2, ih=headH*2;
       ctx.drawImage(headImg, -iw*.6, -ih*.55, iw*1.2, ih*1.2);
       ctx.restore();
-      // soft feather edge
       const g=ctx.createRadialGradient(0,0,Math.min(headW,headH)*.6,0,0,Math.max(headW,headH));
       g.addColorStop(.85,'rgba(255,255,255,0)'); g.addColorStop(1,'rgba(255,255,255,.4)');
       ctx.globalCompositeOperation='destination-over'; ctx.fillStyle=g; ctx.fillRect(-headW,-headH,headW*2,headH*2);
       ctx.globalCompositeOperation='source-over';
     } else {
-      // stylized fallback if no upload yet
       ctx.fillStyle='#111'; ctx.fillRect(-headW,-headH,headW*2,headH*2);
       ctx.fillStyle='#fff'; ctx.fillRect(-5,-headH*.7,10,headH*1.4);
     }
@@ -392,7 +387,7 @@
 
     // physics
     if(dog.dash>0) dog.dash--;
-    dog.vy += dog.onGround?0:gravity;
+    dog.vy += dog.onGround?0:0.62;
     dog.y += dog.vy;
 
     // land
@@ -407,20 +402,27 @@
     dog.tilt = dog.onGround ? Math.sin(t*.06)*.02 : (dog.vy<0 ? -0.07 : 0.06);
     if(dog.onGround) dog.run += 0.32 + speed*0.012;
 
-    // forgiving hitbox
+    // forgiving dog hitbox
     const hb = { x:dog.x - dog.w*0.325, y:dog.y - dog.h*0.36, w:dog.w*0.65, h:dog.h*0.58 };
 
     // scoring & collisions
     if(grace<=0){
       obstacles.forEach(o=>{
-        const ob={x:o.x, y:o.y, w:o.w, h:o.h};
-        // score when passing center
+        // *** obstacle hitbox 50% smaller and centered ***
+        const ob = {
+          x: o.x + o.w * 0.25,
+          y: o.y + o.h * 0.25,
+          w: o.w * 0.5,
+          h: o.h * 0.5
+        };
+
+        // score when passing center of obstacle (not the shrunken box)
         const passX = o.x + o.w/2;
         if(!o.scored && passX < dog.x - 10){
           o.scored=true; jumpsCleared++; updateScore(1);
           if(mode===MODE.LEVELS && ballIdle && jumpsCleared>=goal){ levelUp(); }
         }
-        // collision (mercy if clearly rising and above bar)
+        // collision (mercy if clearly rising and above original bar)
         if(rects(hb, ob)){
           const rising = dog.vy < -2; const aboveBar = hb.y + hb.h < o.y + 20;
           if(!(rising && aboveBar)) fail();
