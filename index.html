@@ -187,7 +187,7 @@
     speed=6.6; grace=120; shake=0; jumpsCleared=0;
     if(full && mode===MODE.LEVELS){ level=1; goal=10; }
     clouds=makeClouds(); hills=makeHills(); grass=makeGrass();
-    obstacles=[]; spawnTimer=160;
+    obstacles=[]; obstacles=[]; spawnTimer=260; // delay before first jump;
     dog.baseY=cv.height*.72; dog.y=dog.baseY; dog.vy=0; dog.onGround=true; dog.dash=0; dog.tilt=0; dog.squash=0; dog.run=0;
     if(mode===MODE.LEVELS){ startThrow(); }
     else { ballIdle=false; throwing=false; }
