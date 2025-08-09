@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Perdita: Border Collie Agility</title>
+<title>Border Collie Agility</title>
 <style>
   :root{
     --skyTop:#7ecbff; --skyMid:#a9ddff;
     --grass1:#62ce66; --grass2:#3aa64a;
-    --metal:#9e9e9e; --postRed:#e53935; --postDark:#b71c1c; --blue:#1565c0;
+    --blue:#1565c0; --post:#e53935; --steel:#9e9e9e;
     --tennis:#38c35a; --tennisSeam:#f7f7f7;
     --pillOn:#00c853; --pillOff:#d2d2d2;
   }
@@ -38,6 +38,7 @@
          display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .bigbtn{font-size:clamp(14px,2.3vw,18px);padding:.8rem .7rem;border-radius:14px;background:#fff;
           box-shadow:0 10px 25px rgba(0,0,0,.18);border:2px solid rgba(0,0,0,.08);font-weight:800}
+
   .overlay{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));z-index:9999}
   .panel{background:#fff;border-radius:16px;padding:18px;border:1px solid rgba(0,0,0,.06);box-shadow:0 12px 30px rgba(0,0,0,.18);text-align:center;max-width:560px}
   .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
@@ -72,7 +73,7 @@
 <!-- Start -->
 <div id="startOverlay" class="overlay">
   <div class="panel">
-    <h2>Perdita: Border Collie Agility</h2>
+    <h2>Border Collie Agility</h2>
     <p>Tap Start to enable audio on iPhone/iPad.</p>
     <div class="row">
       <button id="startBtn" class="modebtn">▶️ Start with Sound</button>
@@ -136,12 +137,12 @@ chooseLevels.addEventListener('click',()=>{mode=MODE.LEVELS;modeNameEl.textConte
 chooseEndless.addEventListener('click',()=>{mode=MODE.ENDLESS;modeNameEl.textContent='Endless';reset(true);modeOverlay.style.display='none';});
 
 let running=true, gameOver=false, t=0, speed=6.2, score=0, grace=120, shake=0;
-let jumpsCleared=0, level=1, goal=10, throwing=false, ballX=-60, ballY=140, ballSpin=0, ballIdle=false;
+let cleared=0, level=1, goal=10, throwing=false, ballX=-60, ballY=140, ballSpin=0, ballIdle=false;
 const gravity=.62;
 
-/* ===== Dog (clean cartoony collie) ===== */
+/* ===== Friendly cartoon collie ===== */
 const dog={ x:260, y:0, vy:0, w:188, h:118, baseY:0, onGround:true,
-  run:0, tilt:0, squash:0, coyote:0, frame:0, frameTimer:0, state:'run',
+  run:0, tilt:0, coyote:0, frame:0, frameTimer:0, state:'run',
   duck:0, weave:0
 };
 
@@ -153,19 +154,16 @@ function bumps(n,w,h){ const a=[]; for(let i=0;i<n;i++) a.push({w,h:h*(.6+Math.r
 function makeGrass(){ const a=[]; for(let i=0;i<120;i++) a.push({x:Math.random()*cv.width,s:Math.random()*Math.PI*2}); return a; }
 
 /* ===== Obstacles ===== */
-const TYPES=['bar','spread','panel','tyre','long','weave','tunnel'];
 let obstacles=[], spawnTimer=160;
-
-/* ===== Per-action timing (must press matching button) ===== */
-let lastAction=null, actionTimer=0; // frames ~60fps
-function setAction(a){ lastAction=a; actionTimer=28; } // ~0.45s window
+let lastAction=null, actionTimer=0; // what player pressed recently
+function setAction(a){ lastAction=a; actionTimer=28; }
 
 /* ===== Particles ===== */
 const parts=[];
 function puff(x,y,dir=1,color='#a5d6a7',n=12){ for(let i=0;i<n;i++) parts.push({x,y,vx:(Math.random()*2+1)*dir,vy:-Math.random()*2-.5,life:30+Math.random()*20,color}); }
 function confetti(x,y,n=40){ for(let i=0;i<n;i++) parts.push({x,y,vx:(Math.random()*6-3),vy:(Math.random()*-4-2),life:40+Math.random()*30,color:`hsl(${(Math.random()*360)|0} 90% 60%)`}); }
 
-/* ===== Audio (works after Start) ===== */
+/* ===== Audio (procedural; works after Start) ===== */
 let ac=null, master=null, sfxOn=false, musicOn=false, musicTimer=null;
 function ensureAudio(){ if(ac) return; const C=window.AudioContext||window.webkitAudioContext; ac=new C(); master=ac.createGain(); master.gain.value=.85; master.connect(ac.destination); }
 function env(dur=0.2, peak=0.8){ const g=ac.createGain(); const now=ac.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(peak, now+0.01); g.gain.exponentialRampToValueAtTime(0.0001, now+dur); return {g,now}; }
@@ -213,44 +211,42 @@ musicBtn.addEventListener('click',toggleMusic);
 startBtn.addEventListener('click',()=>{ ensureAudio(); ac.resume?.(); sfxOn=true; soundBtn.classList.add('on'); soundBtn.textContent='🔊 Sound On'; sfx_bark(); startOverlay.style.display='none'; modeOverlay.style.display='grid'; });
 startMuted.addEventListener('click',()=>{ startOverlay.style.display='none'; modeOverlay.style.display='grid'; });
 
-/* ===== Controls ===== */
-function pressJump(){ setAction('jump'); if(dog.onGround) { dog.vy=-23.5; dog.onGround=false; dog.state='jump'; sfx_whoosh(); } }
-function pressLong(){ setAction('long'); if(dog.onGround) { dog.vy=-26.0; dog.onGround=false; dog.state='jump'; sfx_whoosh(); } }
-function pressTunnel(){ setAction('tunnel'); dog.duck=22; }
-function pressWeave(){ setAction('weave'); dog.weave=28; }
-
+/* ===== Controls (per obstacle) ===== */
 btnJump.addEventListener('touchstart',e=>{e.preventDefault();pressJump();},{passive:false});
 btnTunnel.addEventListener('touchstart',e=>{e.preventDefault();pressTunnel();},{passive:false});
 btnWeave.addEventListener('touchstart',e=>{e.preventDefault();pressWeave();},{passive:false});
 btnLong.addEventListener('touchstart',e=>{e.preventDefault();pressLong();},{passive:false});
-
 addEventListener('keydown',e=>{
-  if(['ArrowUp','Space'].includes(e.code)) pressJump();
-  else if(e.code==='KeyL') pressLong();
+  if(['Space','ArrowUp'].includes(e.code)) pressJump();
   else if(e.code==='KeyT') pressTunnel();
   else if(e.code==='KeyW') pressWeave();
+  else if(e.code==='KeyL') pressLong();
   else if(e.code==='KeyP') togglePause();
 });
-
 pauseBtn.addEventListener('click',togglePause);
 restartBtn.addEventListener('click',()=>reset(true));
 function togglePause(){ running=!running; pauseBtn.textContent=running?'⏸️ Pause':'▶️ Resume'; }
+
+function pressJump(){ setAction('jump'); if(dog.onGround){ dog.vy=-24; dog.onGround=false; dog.state='jump'; sfx_whoosh(); } }
+function pressLong(){ setAction('long'); if(dog.onGround){ dog.vy=-26.5; dog.onGround=false; dog.state='jump'; sfx_whoosh(); } }
+function pressTunnel(){ setAction('tunnel'); dog.duck=22; }
+function pressWeave(){ setAction('weave'); dog.weave=28; }
 
 /* ===== Reset / Level Mgmt ===== */
 function reset(full=false){
   running=true; gameOver=false; t=0; speed=6.2;
   if(full){ score=0; updateScore(0,true); level=1; goal=10; }
-  grace=(mode===MODE.ENDLESS?240:1); shake=0; jumpsCleared=0;
+  grace=(mode===MODE.ENDLESS?240:1); shake=0; cleared=0;
   clouds=makeClouds(); hills=makeHills(); grass=makeGrass();
   obstacles=[]; spawnTimer=(mode===MODE.ENDLESS?220:9999);
-  Object.assign(dog,{ baseY:cv.height*.72, y:cv.height*.72, vy:0, onGround:true, run:0, tilt:0, squash:0, coyote:0, frame:0, frameTimer:0, state:'run', duck:0, weave:0 });
+  Object.assign(dog,{ baseY:cv.height*.72, y:cv.height*.72, vy:0, onGround:true, run:0, tilt:0, coyote:0, frame:0, frameTimer:0, state:'run', duck:0, weave:0 });
   lastAction=null; actionTimer=0;
   if(mode===MODE.LEVELS){ startThrow(); } else { ballIdle=false; throwing=false; }
 }
 function startThrow(){ throwing=true; ballIdle=false; ballX=-60; ballY=cv.height*.22; ballSpin=0; }
 function levelUp(){ sfx_level(); confetti(cv.width-60, dog.baseY-90, 60);
   level++; const inc=5+Math.floor(Math.random()*5); goal+=inc; speed+=0.22;
-  throwing=false; ballIdle=false; obstacles=[]; spawnTimer=9999; jumpsCleared=0; grace=90; startThrow(); }
+  throwing=false; ballIdle=false; obstacles=[]; spawnTimer=9999; cleared=0; grace=90; startThrow(); }
 
 /* ===== Helpers ===== */
 function rects(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y; }
@@ -294,64 +290,58 @@ function spawnObstacle(){
   obstacles.push({type, x, y:gy - s.h, w:s.w, h:s.h, scored:false, bounce:0});
 }
 function drawObstacle(o){
-  const groundY = dog.baseY + 26; // absolute ground
+  const groundY = dog.baseY + 26;
   const postW = 14, footH = 6;
 
-  // ground shadow
+  // shadow on ground
   ctx.fillStyle='rgba(0,0,0,.20)';
   ctx.beginPath(); ctx.ellipse(o.x+o.w*.5, groundY-6, Math.max(28,o.w*.42), 10, 0, 0, Math.PI*2); ctx.fill();
 
-  // Ensure everything sits on ground: draw feet/caps against groundY.
   if(o.type==='bar'||o.type==='spread'||o.type==='panel'){
-    ctx.fillStyle='#e53935';
+    ctx.fillStyle= getComputedStyle(document.documentElement).getPropertyValue('--post') || '#e53935';
     rr(o.x, o.y, postW, (groundY - o.y - footH), 3, true);
     rr(o.x+o.w-postW, o.y, postW, (groundY - o.y - footH), 3, true);
-    ctx.fillStyle='#9e9e9e';
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--steel') || '#9e9e9e';
     rr(o.x-4, groundY-footH, postW+8, footH, 2, true);
     rr(o.x+o.w-postW-4, groundY-footH, postW+8, footH, 2, true);
-    ctx.fillStyle='#b71c1c';
-    rr(o.x-2, o.y-8, postW+4, 6, 2, true);
-    rr(o.x+o.w-postW-2, o.y-8, postW+4, 6, 2, true);
   }
 
   if(o.type==='bar'){
-    const y=o.y+22+Math.sin(o.bounce)*1.1; ctx.fillStyle='#fff'; ctx.fillRect(o.x+postW,y,o.w-postW*2,10);
-    ctx.fillStyle='#1565c0'; for(let i=0;i<Math.floor((o.w-postW*2)/14);i+=2) ctx.fillRect(o.x+postW+i*14,y,14,10);
+    const y=o.y+22; ctx.fillStyle='#fff'; ctx.fillRect(o.x+postW,y,o.w-postW*2,10);
+    ctx.fillStyle=varColor('--blue','#1565c0'); for(let i=0;i<Math.floor((o.w-postW*2)/14);i+=2) ctx.fillRect(o.x+postW+i*14,y,14,10);
   }
   if(o.type==='spread'){
-    const y1=o.y+18+Math.sin(o.bounce)*1.2, y2=o.y+44+Math.sin(o.bounce+.5)*1.0;
-    ctx.fillStyle='#fff'; ctx.fillRect(o.x+postW,y1,o.w-postW*2,10); ctx.fillRect(o.x+postW,y2,o.w-postW*2,10);
-    ctx.fillStyle='#1565c0'; for(let i=0;i<Math.floor((o.w-postW*2)/16);i+=2){ ctx.fillRect(o.x+postW+i*16,y1,16,10); ctx.fillRect(o.x+postW+i*16,y2,16,10); }
+    const y1=o.y+18, y2=o.y+44; ctx.fillStyle='#fff'; ctx.fillRect(o.x+postW,y1,o.w-postW*2,10); ctx.fillRect(o.x+postW,y2,o.w-postW*2,10);
+    ctx.fillStyle=varColor('--blue','#1565c0'); for(let i=0;i<Math.floor((o.w-postW*2)/16);i+=2){ ctx.fillRect(o.x+postW+i*16,y1,16,10); ctx.fillRect(o.x+postW+i*16,y2,16,10); }
   }
   if(o.type==='panel'){
     const pY=o.y+18, ph=o.h-28; ctx.fillStyle='#fff'; rr(o.x+postW,pY,o.w-postW*2,ph,8,true);
-    ctx.fillStyle='#1565c0'; for(let y=pY+8;y<pY+ph-8;y+=18) ctx.fillRect(o.x+postW+8,y,o.w-postW*2-16,6);
+    ctx.fillStyle=varColor('--blue','#1565c0'); for(let y=pY+8;y<pY+ph-8;y+=18) ctx.fillRect(o.x+postW+8,y,o.w-postW*2-16,6);
   }
   if(o.type==='tyre'){
     const cx=o.x+o.w/2, cy=o.y+o.h/2;
     ctx.fillStyle='#e53935'; rr(o.x+o.w/2-6, o.y, 12, (groundY - o.y - footH), 3, true);
     ctx.fillStyle='#9e9e9e'; rr(o.x+o.w/2-14, groundY-footH, 28, footH, 2, true);
     ctx.lineWidth=12; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.ellipse(cx, cy, 48, 68, 0, 0, Math.PI*2); ctx.stroke();
-    ctx.lineWidth=6; ctx.strokeStyle='#1565c0'; ctx.beginPath(); ctx.ellipse(cx, cy, 48, 68, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.lineWidth=6; ctx.strokeStyle=varColor('--blue','#1565c0'); ctx.beginPath(); ctx.ellipse(cx, cy, 48, 68, 0, 0, Math.PI*2); ctx.stroke();
   }
   if(o.type==='long'){
     const y=o.y+o.h-30, h=26; ctx.fillStyle='#fff'; rr(o.x,y,o.w,h,6,true); ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.strokeRect(o.x,y,o.w,h);
-    ctx.fillStyle='#1565c0'; for(let i=0;i<o.w;i+=14) ctx.fillRect(o.x+i+4,y+4,10,6);
+    ctx.fillStyle=varColor('--blue','#1565c0'); for(let i=0;i<o.w;i+=14) ctx.fillRect(o.x+i+4,y+4,10,6);
   }
   if(o.type==='weave'){
     const poles=6, gap=o.w/(poles+1), by=dog.baseY;
-    for(let i=1;i<=poles;i++){ const px=o.x+gap*i; ctx.fillStyle='#fff'; rr(px-4,by-90,8,90,3,true); ctx.fillStyle='#1565c0'; ctx.fillRect(px-4,by-60,8,16); }
+    for(let i=1;i<=poles;i++){ const px=o.x+gap*i; ctx.fillStyle='#fff'; rr(px-4,by-90,8,90,3,true); ctx.fillStyle=varColor('--blue','#1565c0'); ctx.fillRect(px-4,by-60,8,16); }
   }
   if(o.type==='tunnel'){
     const by=dog.baseY; const r=40; const x1=o.x, x2=o.x+o.w;
-    // outer tube
     ctx.fillStyle='#607d8b'; rr(x1, by-r-6, o.w, r*2+12, 18, true);
     ctx.fillStyle='#90a4ae'; rr(x1+6, by-r, o.w-12, r*2, 16, true);
-    // open mouth ring
     ctx.beginPath(); ctx.ellipse(x2, by, r, r*0.82, 0, 0, Math.PI*2); ctx.fillStyle='#455a64'; ctx.fill();
     ctx.beginPath(); ctx.ellipse(x2-6, by, r-8, (r-8)*0.82, 0, 0, Math.PI*2); ctx.fillStyle='#263238'; ctx.fill();
   }
 }
+function varColor(name, fallback){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||fallback; }
 function obstacleHitbox(o){
   switch(o.type){
     case 'bar': case 'panel': return {x:o.x+o.w*.25,y:o.y+o.h*.25,w:o.w*.5,h:o.h*.5, need:'jump'};
@@ -363,21 +353,21 @@ function obstacleHitbox(o){
   }
 }
 
-/* ===== Tennis Ball (levels) ===== */
+/* ===== Tennis Ball ===== */
 function drawBall(){
   if(!(throwing||ballIdle)) return;
   const r=18, x=ballIdle?cv.width-60:ballX, y=ballIdle?dog.baseY-90:ballY;
   ctx.save();
   ctx.beginPath(); ctx.arc(x,y,r+8,0,Math.PI*2); ctx.fillStyle='rgba(56,195,90,.25)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--tennis'); ctx.fill();
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--tennisSeam'); ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=varColor('--tennis','#38c35a'); ctx.fill();
+  ctx.strokeStyle=varColor('--tennisSeam','#f7f7f7'); ctx.lineWidth=3;
   ctx.beginPath(); ctx.arc(x-6,y,r*.85,Math.PI*.3,Math.PI*1.3); ctx.stroke();
   ctx.beginPath(); ctx.arc(x+6,y,r*.85,-Math.PI*.7,Math.PI*.3); ctx.stroke();
   ctx.beginPath(); ctx.arc(x+5,y+5,r*.8,0,Math.PI*2); ctx.fillStyle='rgba(42,159,70,.25)'; ctx.fill();
   ctx.restore();
 }
 
-/* ===== Dog drawing (simple/clean) ===== */
+/* ===== Dog drawing (friendly cartoon) ===== */
 function drawDog(){
   dog.frameTimer++; const fps = dog.state==='run'?14 : dog.state==='jump'?12 : 10;
   if(dog.frameTimer>=Math.max(2,Math.round(60/fps))){ dog.frameTimer=0; const max = dog.state==='run'?8:3; dog.frame=(dog.frame+1)%max; }
@@ -388,19 +378,19 @@ function drawDog(){
   // shadow
   ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0,H+16,Math.max(38,W*.64)*(dog.onGround?1:.7),12,0,0,Math.PI*2); ctx.fill();
 
-  // pose
+  // gait
   const runPhase = (dog.frame/8)*Math.PI*2;
   const lift = dog.state==='jump' ? (dog.frame===1? -10 : dog.frame===0? -6 : -3) : 0;
   const leg = (amp,flip=0)=>Math.sin(runPhase+(flip?Math.PI:0))*amp;
 
   const BLACK='#111', WHITE='#fff', TIP='#eee';
 
-  // torso masses
+  // body masses
   ctx.fillStyle=BLACK; rr(-W*.05, H*.48+lift, W*.74, H*.48, 28, true);
   ctx.beginPath(); ctx.ellipse(W*.22, H*.64+lift, W*.22, H*.20, 0, 0, Math.PI*2); ctx.fill(); // hip
   ctx.beginPath(); ctx.ellipse(-W*.14, H*.54+lift, W*.20, H*.18, 0, 0, Math.PI*2); ctx.fill(); // shoulder
 
-  // ruff / chest
+  // white ruff
   ctx.fillStyle=WHITE; rr(-W*.12, H*.60+lift, W*.26, H*.32, 22, true);
 
   // legs
@@ -414,8 +404,6 @@ function drawDog(){
     ctx.fillStyle=BLACK; rr(-7,0,14,26,5,true); ctx.translate(0,24); ctx.rotate((-swing*.55)*Math.PI/180);
     rr(-6,0,12,20,4,true); ctx.fillStyle=TIP; rr(-6,14,12,8,3,true); ctx.restore();
   }
-  // duck pose for tunnel
-  const duckY = dog.duck>0 ? 8 : 0;
   frontLeg(-W*.24,false); frontLeg(-W*.04,true);
   hindLeg(W*.12,true);   hindLeg(W*.30,false);
 
@@ -426,16 +414,16 @@ function drawDog(){
   ctx.strokeStyle=TIP; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(-W*.10,-20); ctx.lineTo(-W*.06,-28); ctx.stroke();
   ctx.restore();
 
-  // neck & head
-  ctx.fillStyle=BLACK; rr(W*.18, H*.38+lift+duckY, W*.22, H*.18, 10, true);
+  // neck & head (with blaze)
+  ctx.fillStyle=BLACK; rr(W*.18, H*.38+lift+(dog.duck?8:0), W*.22, H*.18, 10, true);
   const headW=W*.36, headH=H*.28;
-  ctx.save(); ctx.translate(W*.42, H*.30+lift+duckY + Math.sin(t*.20)*1.0); ctx.rotate(-0.05 + (dog.state==='run'?Math.sin(t*.18)*0.02:0));
+  ctx.save(); ctx.translate(W*.42, H*.30+lift+(dog.duck?8:0) + Math.sin(t*.20)*1.0); ctx.rotate(-0.05 + (dog.state==='run'?Math.sin(t*.18)*0.02:0));
   ctx.fillStyle=BLACK; rr(-headW*.85,-headH*.78, headW*1.8, headH*1.55, headW*.30, true);
-  ctx.fillStyle=WHITE; rr(-3,-headH*.70,7,headH*1.40,3.5,true); // blaze
-  ctx.fillStyle='#ededed'; rr(headW*.08,-headH*.02, headW*.50, headH*.30, 14, true); // muzzle
-  ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(headW*.50, headH*.10, 4,3,0,0,Math.PI*2); ctx.fill(); // nose
-  ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(headW*.06, -headH*.12, 4.2,3.2, 0.25, 0, Math.PI*2); ctx.fill(); // eye
-  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(headW*.08, -headH*.135, 1.1, 0, Math.PI*2); ctx.fill(); // eye highlight
+  ctx.fillStyle=WHITE; rr(-3,-headH*.70,7,headH*1.40,3.5,true);
+  ctx.fillStyle='#ededed'; rr(headW*.08,-headH*.02, headW*.50, headH*.30, 14, true);
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.ellipse(headW*.50, headH*.10, 4,3,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(headW*.06, -headH*.12, 4.2,3.2, 0.25, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(headW*.08, -headH*.135, 1.1, 0, Math.PI*2); ctx.fill();
   // ears
   ctx.fillStyle=BLACK;
   ctx.save(); ctx.translate(-headW*.02,-headH*.46); ctx.rotate(-0.10);
@@ -443,7 +431,7 @@ function drawDog(){
   ctx.save(); ctx.translate(headW*.12,-headH*.52); ctx.rotate(0.05);
   ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(headW*.14,-headH*.30); ctx.lineTo(headW*.10, headH*.02); ctx.closePath(); ctx.fill(); ctx.restore();
 
-  ctx.restore(); // head
+  ctx.restore();
   ctx.restore();
 }
 
@@ -453,13 +441,11 @@ function update(){
   t++; speed+=0.0008; if(grace>0) grace--; if(shake>0) shake--; if(actionTimer>0) actionTimer--;
   if(dog.duck>0) dog.duck--; if(dog.weave>0) dog.weave--;
 
-  // levels ball
   if(mode===MODE.LEVELS){
     if(throwing){ ballX+=10; ballSpin+=0.25; if(ballX>cv.width-60){ throwing=false; ballIdle=true; ballSpin=0; spawnTimer=140; } }
     else if(ballIdle){ ballSpin+=0.15; }
   }
 
-  // spawn
   spawnTimer--;
   if(spawnTimer<=0){
     spawnObstacle();
@@ -469,34 +455,30 @@ function update(){
   obstacles.forEach(o=>{ o.x-=speed; o.bounce+=0.25; });
   obstacles = obstacles.filter(o=>o.x+o.w>-60);
 
-  // physics
   if(dog.onGround){ dog.coyote=10; dog.run+=0.32+speed*0.012; }
   else if(dog.coyote>0) dog.coyote--;
   if(!dog.onGround) dog.vy += gravity;
   dog.y += dog.vy;
   if(dog.y >= dog.baseY){
-    if(!dog.onGround){ dog.y=dog.baseY; dog.vy=0; dog.onGround=true; dog.squash=0.35; shake=6; sfx_crunch(); dog.state='run'; puff(dog.x-10, dog.baseY+8, -1); puff(dog.x+10, dog.baseY+8, +1); }
+    if(!dog.onGround){ dog.y=dog.baseY; dog.vy=0; dog.onGround=true; sfx_crunch(); dog.state='run'; puff(dog.x-10, dog.baseY+8, -1); puff(dog.x+10, dog.baseY+8, +1); }
     dog.y=dog.baseY;
   } else dog.onGround=false;
 
-  // tilt
   dog.tilt = dog.onGround ? Math.sin(t*.06)*.02 : (dog.vy<0 ? -0.07 : 0.06);
 
-  // collisions (require matching action)
   const hb = { x:dog.x - dog.w*0.30, y:dog.y - dog.h*0.34 + (dog.duck?10:0), w:dog.w*0.60, h:dog.h*0.50 - (dog.duck?10:0) };
 
   if(grace<=0){
     obstacles.forEach(o=>{
       const ob=obstacleHitbox(o);
       const passX=o.x+o.w/2;
-      // scoring when passed
       if(!o.scored && passX < dog.x - 10){
-        o.scored=true; jumpsCleared++; updateScore(1);
-        if(mode===MODE.LEVELS && ballIdle && jumpsCleared>=goal) levelUp(); else sfx_bell();
+        o.scored=true; cleared++; updateScore(1);
+        if(mode===MODE.LEVELS && ballIdle && cleared>=goal) levelUp(); else sfx_bell();
       }
       if(rects(hb, ob)){
-        const need=ob.need;
-        const ok = (actionTimer>0 && lastAction===need) || (need==='jump' && dog.vy<-1); // jumping is also valid by arc
+        const ok = (actionTimer>0 && lastAction===ob.need) ||
+                   (ob.need==='jump' && dog.vy<-1); // aerial jump also valid
         if(!ok) fail();
       }
     });
@@ -518,7 +500,7 @@ function draw(){
     ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(14,14,220,60);
     ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.strokeRect(14,14,220,60);
     ctx.fillStyle='#113'; ctx.font='bold 18px -apple-system,system-ui'; ctx.fillText(`Level ${level}`,24,38); ctx.fillText(`Target: ${goal}`,24,62);
-    const pct=Math.min(1,jumpsCleared/goal); ctx.fillStyle='rgba(11,61,32,.1)'; ctx.fillRect(130,28,90,12);
+    const pct=Math.min(1,cleared/goal); ctx.fillStyle='rgba(11,61,32,.1)'; ctx.fillRect(130,28,90,12);
     ctx.fillStyle='#00c853'; ctx.fillRect(130,28,Math.floor(90*pct),12); ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.strokeRect(130,28,90,12);
   }
 }
